@@ -16,9 +16,9 @@ const SuikaGame: React.FC = () => {
   const [currentFruit, setCurrentFruit] = useState<FruitType>(FRUIT_TYPES[0]);
   const currentFruitRef = useRef<FruitType>(FRUIT_TYPES[0]);
   const [nextFruit, setNextFruit] = useState<FruitType>(FRUIT_TYPES[Math.floor(Math.random() * 5)]);
-  const [launcherX, setLauncherX] = useState(270);
-  const launcherXRef = useRef(270);
-  const targetLauncherXRef = useRef(270);
+  const [launcherX, setLauncherX] = useState(300);
+  const launcherXRef = useRef(300);
+  const targetLauncherXRef = useRef(300);
   const currentTiltRef = useRef(0);
   const [dropTimer, setDropTimer] = useState(5);
   const [isGameStarted, setIsGameStarted] = useState(false);
@@ -29,13 +29,37 @@ const SuikaGame: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lang, setLang] = useState<Language>("ja");
-  const [currentTheme, setCurrentTheme] = useState<Theme>(THEMES[0]);
+  const [currentTheme, setCurrentTheme] = useState<Theme>(THEMES.find(t => t.id === 'classic') || THEMES[0]);
+  const [isAssetsLoaded, setIsAssetsLoaded] = useState(false);
 
-  const containerWidth = 540;
-  const containerHeight = 780;
+  const containerWidth = 600;
+  const containerHeight = 850;
   const API_URL = import.meta.env.VITE_API_URL || "https://suika-ranking.your-subdomain.workers.dev";
 
   const t = translations[lang];
+
+  // Preload Assets
+  useEffect(() => {
+    const preloadImages = async () => {
+      const promises = FRUIT_TYPES.map((fruit) => {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.src = fruit.image;
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+      });
+      try {
+        await Promise.all(promises);
+        setIsAssetsLoaded(true);
+      } catch (err) {
+        console.error("Failed to preload assets", err);
+        // Still set to true so game can at least try to run
+        setIsAssetsLoaded(true);
+      }
+    };
+    preloadImages();
+  }, []);
 
   // Language & Theme Detection
   useEffect(() => {
@@ -192,9 +216,9 @@ const SuikaGame: React.FC = () => {
     setScore(0);
     setIsGameOver(false);
     setShowRanking(false);
-    setLauncherX(270);
-    launcherXRef.current = 270;
-    targetLauncherXRef.current = 270;
+    setLauncherX(300);
+    launcherXRef.current = 300;
+    targetLauncherXRef.current = 300;
     currentFruitRef.current = FRUIT_TYPES[0];
     setCurrentFruit(FRUIT_TYPES[0]);
     setDropTimer(5);
@@ -397,14 +421,21 @@ const SuikaGame: React.FC = () => {
           )}
 
           {!isGameStarted && (
-            <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-b-2xl">
-              <button
-                onClick={startGame}
-                className="hover:brightness-125 text-white px-10 py-5 rounded-full font-black text-2xl flex items-center shadow-lg transform transition active:scale-95"
-                style={{ backgroundColor: currentTheme.header }}
-              >
-                <Play className="mr-3 w-8 h-8" /> {t.play_start}
-              </button>
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm rounded-b-2xl">
+              {!isAssetsLoaded ? (
+                <div className="flex flex-col items-center gap-4">
+                   <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+                   <span className="text-white font-bold tracking-widest uppercase">{t.loading}...</span>
+                </div>
+              ) : (
+                <button
+                  onClick={startGame}
+                  className="hover:brightness-125 text-white px-10 py-5 rounded-full font-black text-2xl flex items-center shadow-lg transform transition active:scale-95 animate-in fade-in zoom-in duration-500"
+                  style={{ backgroundColor: currentTheme.header }}
+                >
+                  <Play className="mr-3 w-8 h-8" /> {t.play_start}
+                </button>
+              )}
             </div>
           )}
 
