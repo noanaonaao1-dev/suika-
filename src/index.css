@@ -2,6 +2,10 @@
 
 body {
   margin: 0;
-  overflow: hidden;
-  touch-action: none;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#root {
+  min-height: 100vh;
 }
