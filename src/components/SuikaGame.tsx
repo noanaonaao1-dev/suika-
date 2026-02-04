@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { PhysicsEngine } from "../game/PhysicsEngine";
 import { FRUIT_TYPES } from "../game/fruits";
 import type { FruitType } from "../game/fruits";
-import { Play, RotateCcw, Trophy } from "lucide-react";
+import { Play, Trophy } from "lucide-react";
 
 const SuikaGame: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -36,7 +36,7 @@ const SuikaGame: React.FC = () => {
   const dropFruit = useCallback(() => {
     if (!engineRef.current || isGameOver || !isGameStarted) return;
 
-    engineRef.current.addFruit(launcherXRef.current, 50, currentFruitRef.current);
+    engineRef.current.addFruit(launcherXRef.current, 100, currentFruitRef.current);
     spawnNewFruit();
   }, [isGameOver, isGameStarted, spawnNewFruit]);
 
@@ -48,11 +48,11 @@ const SuikaGame: React.FC = () => {
         launcherXRef.current += velocityRef.current;
 
         const radius = currentFruitRef.current.radius;
-        if (launcherXRef.current < radius) {
-          launcherXRef.current = radius;
+        if (launcherXRef.current < radius + 20) {
+          launcherXRef.current = radius + 20;
           velocityRef.current = 0;
-        } else if (launcherXRef.current > containerWidth - radius) {
-          launcherXRef.current = containerWidth - radius;
+        } else if (launcherXRef.current > containerWidth - radius - 20) {
+          launcherXRef.current = containerWidth - radius - 20;
           velocityRef.current = 0;
         }
 
@@ -170,6 +170,11 @@ const SuikaGame: React.FC = () => {
     }
   };
 
+  const openRanking = async () => {
+    await fetchRanking();
+    setShowRanking(true);
+  };
+
   const submitScore = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
@@ -189,149 +194,236 @@ const SuikaGame: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-orange-50 p-4 font-sans">
-      <div className="flex justify-between w-full max-w-[450px] mb-4">
-        <div className="bg-white p-2 rounded-lg shadow-md">
-          <p className="text-xs text-gray-500">SCORE</p>
-          <p className="text-2xl font-bold">{score}</p>
-        </div>
-        <div className="bg-white p-2 rounded-lg shadow-md flex items-center">
-          <p className="text-xs text-gray-500 mr-2">NEXT</p>
-          <img
-            src={nextFruit.image}
-            className="w-10 h-10 object-contain"
-            alt="next"
-          />
+    <div className="flex flex-col items-center min-h-screen bg-[#f3c483] font-sans overflow-x-hidden">
+      {/* Top Header */}
+      <div className="w-full bg-[#f68b1f] py-2 flex items-center justify-center shadow-md mb-6">
+        <div className="flex items-center text-white font-bold text-xl italic">
+          <div className="bg-green-600 rounded-full w-6 h-6 mr-2 flex items-center justify-center text-xs">🍉</div>
+          play <span className="text-white ml-1">SuikaGame</span>
         </div>
       </div>
 
-      <div className="relative">
-        <div
-          ref={containerRef}
-          className="border-4 border-amber-900 rounded-b-xl overflow-hidden shadow-2xl bg-[#fdfbd4]"
-          style={{ width: containerWidth, height: containerHeight }}
-          onClick={(e) => {
-            if (!isGyroEnabled) {
-              const rect = e.currentTarget.getBoundingClientRect();
-              const newX = e.clientX - rect.left;
-              setLauncherX(newX);
-              launcherXRef.current = newX;
-            }
-          }}
-          onTouchMove={(e) => {
-            if (!isGyroEnabled) {
-              const rect = e.currentTarget.getBoundingClientRect();
-              const touch = e.touches[0];
-              const newX = touch.clientX - rect.left;
-              setLauncherX(newX);
-              launcherXRef.current = newX;
-            }
-          }}
-        />
-
-        {!isGameOver && isGameStarted && (
-          <>
-            {/* Game Over Line */}
-            <div
-              className="absolute top-[100px] w-full h-[2px] bg-red-400/50 pointer-events-none"
-            />
-            {/* Launcher Lane */}
-            <div
-              className="absolute top-0 w-full h-[100px] border-b-2 border-dashed border-gray-300/30 pointer-events-none"
-            />
-            {/* Current Fruit */}
-            <div
-              className="absolute pointer-events-none"
-              style={{
-                left: launcherX - currentFruit.radius,
-                top: 50 - currentFruit.radius,
-                width: currentFruit.radius * 2,
-                height: currentFruit.radius * 2,
-              }}
-            >
-              <img
-                src={currentFruit.image}
-                className="w-full h-full object-contain opacity-80"
-                alt="current"
-              />
-            </div>
-          </>
-        )}
-
-        {!isGameStarted && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm rounded-b-xl">
-            <button
-              onClick={startGame}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-full font-bold text-xl flex items-center shadow-lg transform transition active:scale-95"
-            >
-              <Play className="mr-2" /> プレイ開始
-            </button>
+      <div className="w-full max-w-[500px] px-4 relative flex flex-col items-center">
+        {/* Top Controls Area */}
+        <div className="flex justify-between w-full mb-8 items-center">
+          {/* Score Bubble */}
+          <div className="flex flex-col items-center">
+             <span className="text-[#8b4513] font-bold text-lg mb-1">スコア</span>
+             <div className="w-20 h-20 rounded-full bg-white/40 border-4 border-white/60 flex items-center justify-center shadow-inner">
+                <span className="text-3xl font-black text-[#8b4513]">{score}</span>
+             </div>
           </div>
-        )}
 
-        {isGameOver && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm rounded-b-xl text-white p-6">
-            {!showRanking ? (
-              <>
-                <h2 className="text-4xl font-black mb-2 text-orange-400">GAME OVER</h2>
-                <p className="text-2xl mb-6">最終スコア: {score}</p>
-                <button
-                  onClick={submitScore}
-                  disabled={isSubmitting}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-full font-bold text-lg flex items-center mb-4 disabled:opacity-50"
-                >
-                  <Trophy className="mr-2" /> {isSubmitting ? "送信中..." : "スコアを登録"}
-                </button>
-                <button
-                  onClick={resetGame}
-                  className="text-white underline"
-                >
-                  登録せずにリトライ
-                </button>
-              </>
-            ) : (
-              <div className="w-full max-w-[300px]">
-                <h2 className="text-2xl font-black mb-4 text-center text-yellow-400">世界ランキング</h2>
-                <div className="bg-white/10 rounded-lg p-4 mb-6">
-                  {ranking.length > 0 ? (
-                    ranking.map((item, index) => (
-                      <div key={index} className="flex justify-between items-center py-2 border-b border-white/10 last:border-0">
-                        <span className="font-bold text-yellow-500">{index + 1}位</span>
-                        <span className="text-xl">{item.score.toLocaleString()}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-center">データなし</p>
-                  )}
+          {/* Leaderboard Button */}
+          <button
+            onClick={openRanking}
+            className="bg-[#f68b1f] hover:bg-[#e07a1b] text-white px-4 py-2 rounded-lg font-bold flex items-center shadow-lg transform transition active:scale-95"
+          >
+            <Trophy className="w-4 h-4 mr-2" /> リーダーボード
+          </button>
+
+          {/* Next Bubble */}
+          <div className="flex flex-col items-center">
+             <span className="text-[#8b4513] font-bold text-lg mb-1 text-right w-full">ネクスト</span>
+             <div className="w-20 h-20 rounded-full bg-white/40 border-4 border-white/60 flex items-center justify-center shadow-inner overflow-hidden">
+                <img
+                  src={nextFruit.image}
+                  className="w-12 h-12 object-contain"
+                  alt="next"
+                />
+             </div>
+          </div>
+        </div>
+
+        {/* Game Area */}
+        <div className="relative">
+          {/* 3D Box Visual Effect */}
+          <div className="absolute inset-x-[-15px] bottom-[-15px] top-[100px] bg-white/20 rounded-b-2xl border-[15px] border-[#e8d5b5]/80 pointer-events-none shadow-2xl">
+             <div className="absolute inset-0 border-[2px] border-white/30 rounded-lg"></div>
+          </div>
+
+          <div
+            ref={containerRef}
+            className="relative z-10 overflow-hidden"
+            style={{ width: containerWidth, height: containerHeight }}
+            onClick={(e) => {
+              if (!isGyroEnabled) {
+                const rect = e.currentTarget.getBoundingClientRect();
+                let newX = e.clientX - rect.left;
+                const radius = currentFruitRef.current.radius;
+                newX = Math.max(radius + 20, Math.min(containerWidth - radius - 20, newX));
+                setLauncherX(newX);
+                launcherXRef.current = newX;
+              }
+            }}
+            onTouchMove={(e) => {
+              if (!isGyroEnabled) {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const touch = e.touches[0];
+                let newX = touch.clientX - rect.left;
+                const radius = currentFruitRef.current.radius;
+                newX = Math.max(radius + 20, Math.min(containerWidth - radius - 20, newX));
+                setLauncherX(newX);
+                launcherXRef.current = newX;
+              }
+            }}
+          />
+
+          {!isGameOver && isGameStarted && (
+            <>
+              {/* Game Over Line */}
+              <div
+                className="absolute top-[100px] w-full h-[2px] bg-red-400/50 pointer-events-none z-20"
+              />
+              {/* Launcher Lane */}
+              <div
+                className="absolute top-0 w-full h-[100px] border-b-2 border-dashed border-white/30 pointer-events-none z-0"
+              />
+              {/* Cloud Launcher Character */}
+              <div
+                className="absolute pointer-events-none transition-all duration-75 z-20"
+                style={{
+                  left: launcherX - 40,
+                  top: 10,
+                  width: 80,
+                  height: 60,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center'
+                }}
+              >
+                <div className="relative">
+                   <div className="text-white drop-shadow-md">
+                      <svg width="80" height="60" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.5,19c-3.037,0-5.5-2.463-5.5-5.5c0-0.007,0-0.013,0-0.019c-0.165,0.012-0.331,0.019-0.5,0.019c-3.037,0-5.5-2.463-5.5-5.5 c0-3.037,2.463-5.5,5.5-5.5c0.169,0,0.335,0.007,0.5,0.019C12,2.487,14.463,0,17.5,0c3.037,0,5.5,2.463,5.5,5.5 c0,0.169-0.007,0.335-0.019,0.5C23.513,6.165,24,8.632,24,11.5C24,15.642,20.642,19,17.5,19z" />
+                        <circle cx="14" cy="11" r="1.5" fill="#555" />
+                        <circle cx="21" cy="11" r="1.5" fill="#555" />
+                        <path d="M16 14 Q 17.5 16 19 14" stroke="#555" strokeWidth="1" fill="none" />
+                      </svg>
+                   </div>
+                   {/* Current Fruit dangling */}
+                   <div
+                     className="absolute"
+                     style={{
+                       left: 40 - currentFruit.radius,
+                       top: 45,
+                       width: currentFruit.radius * 2,
+                       height: currentFruit.radius * 2,
+                     }}
+                   >
+                     <img
+                       src={currentFruit.image}
+                       className="w-full h-full object-contain"
+                       alt="current"
+                     />
+                   </div>
                 </div>
-                <button
-                  onClick={resetGame}
-                  className="w-full bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full font-bold text-lg flex items-center justify-center"
-                >
-                  <RotateCcw className="mr-2" /> もう一度遊ぶ
-                </button>
               </div>
+            </>
+          )}
+
+          {!isGameStarted && (
+            <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-sm rounded-b-xl">
+              <button
+                onClick={startGame}
+                className="bg-[#f68b1f] hover:bg-[#e07a1b] text-white px-8 py-4 rounded-full font-bold text-xl flex items-center shadow-lg transform transition active:scale-95"
+              >
+                <Play className="mr-2" /> プレイ開始
+              </button>
+            </div>
+          )}
+
+          {isGameOver && (
+            <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm rounded-b-xl text-white p-6">
+              {!showRanking ? (
+                <>
+                  <h2 className="text-4xl font-black mb-2 text-[#f68b1f]">GAME OVER</h2>
+                  <p className="text-2xl mb-6">最終スコア: {score}</p>
+                  <button
+                    onClick={submitScore}
+                    disabled={isSubmitting}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-full font-bold text-lg flex items-center mb-4 disabled:opacity-50"
+                  >
+                    <Trophy className="mr-2" /> {isSubmitting ? "送信中..." : "スコアを登録"}
+                  </button>
+                  <button
+                    onClick={resetGame}
+                    className="text-white underline"
+                  >
+                    登録せずにリトライ
+                  </button>
+                </>
+              ) : (
+                <div className="w-full max-w-[300px]">
+                  <h2 className="text-2xl font-black mb-4 text-center text-yellow-400">世界ランキング</h2>
+                  <div className="bg-white/10 rounded-lg p-4 mb-6">
+                    {ranking.length > 0 ? (
+                      ranking.map((item, index) => (
+                        <div key={index} className="flex justify-between items-center py-2 border-b border-white/10 last:border-0">
+                          <span className="font-bold text-yellow-500">{index + 1}位</span>
+                          <span className="text-xl">{item.score.toLocaleString()}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-center">データなし</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setShowRanking(false)}
+                    className="w-full bg-[#f68b1f] hover:bg-[#e07a1b] text-white px-6 py-3 rounded-full font-bold text-lg flex items-center justify-center"
+                  >
+                    閉じる
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Leaderboard Modal (when opened from main button) */}
+          {showRanking && !isGameOver && (
+            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/70 backdrop-blur-md rounded-b-xl text-white p-6">
+               <div className="w-full max-w-[300px]">
+                  <h2 className="text-2xl font-black mb-4 text-center text-yellow-400">世界ランキング</h2>
+                  <div className="bg-white/10 rounded-lg p-4 mb-6">
+                    {ranking.length > 0 ? (
+                      ranking.map((item, index) => (
+                        <div key={index} className="flex justify-between items-center py-2 border-b border-white/10 last:border-0">
+                          <span className="font-bold text-yellow-500">{index + 1}位</span>
+                          <span className="text-xl">{item.score.toLocaleString()}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-center">ロード中...</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setShowRanking(false)}
+                    className="w-full bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full font-bold text-lg flex items-center justify-center"
+                  >
+                    閉じる
+                  </button>
+                </div>
+            </div>
+          )}
+        </div>
+
+        {isGameStarted && !isGameOver && (
+          <div className="mt-12 flex flex-col items-center gap-4">
+            <div className="text-[#8b4513] font-bold text-lg">
+              自動落下まで: <span className="text-[#f68b1f] text-2xl font-black">{dropTimer}</span>秒
+            </div>
+            <button
+              onClick={dropFruit}
+              className="w-24 h-24 bg-red-500 hover:bg-red-600 border-b-8 border-red-800 text-white rounded-full font-bold text-xl shadow-xl transform transition active:scale-90 active:border-b-0 flex items-center justify-center"
+            >
+              落とす
+            </button>
+            {!isGyroEnabled && (
+              <p className="text-[#8b4513]/60 text-sm italic mt-2 font-medium">※ジャイロ未検知。クリックで位置を移動できます。</p>
             )}
           </div>
         )}
       </div>
-
-      {isGameStarted && !isGameOver && (
-        <div className="mt-6 flex flex-col items-center gap-4">
-          <div className="text-gray-600 font-medium">
-            自動落下まで: <span className="text-orange-600 text-xl font-bold">{dropTimer}</span>秒
-          </div>
-          <button
-            onClick={dropFruit}
-            className="w-24 h-24 bg-red-500 hover:bg-red-600 text-white rounded-full font-bold text-xl shadow-xl transform transition active:scale-90 flex items-center justify-center"
-          >
-            落とす
-          </button>
-          {!isGyroEnabled && (
-            <p className="text-sm text-gray-400 italic">※ジャイロ未検知。クリックで位置を移動できます。</p>
-          )}
-        </div>
-      )}
     </div>
   );
 };

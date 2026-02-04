@@ -28,7 +28,7 @@ export class PhysicsEngine {
         width: this.containerWidth,
         height: this.containerHeight,
         wireframes: false,
-        background: "#fdfbd4",
+        background: "transparent", // Use CSS background
       },
     });
 
@@ -38,7 +38,14 @@ export class PhysicsEngine {
   }
 
   setupWorld() {
-    const wallOptions = { isStatic: true, render: { fillStyle: "#8b4513" } };
+    const wallOptions = {
+      isStatic: true,
+      render: {
+        fillStyle: "transparent" // Hide physics walls, use CSS for visuals
+      }
+    };
+
+    // Bottom
     const ground = Matter.Bodies.rectangle(
       this.containerWidth / 2,
       this.containerHeight + 25,
@@ -46,6 +53,7 @@ export class PhysicsEngine {
       50,
       wallOptions
     );
+    // Left
     const leftWall = Matter.Bodies.rectangle(
       -25,
       this.containerHeight / 2,
@@ -53,6 +61,7 @@ export class PhysicsEngine {
       this.containerHeight,
       wallOptions
     );
+    // Right
     const rightWall = Matter.Bodies.rectangle(
       this.containerWidth + 25,
       this.containerHeight / 2,
@@ -96,7 +105,7 @@ export class PhysicsEngine {
 
       const fruits = this.engine.world.bodies.filter(b => b.label && b.label.startsWith("fruit-"));
       for (const fruit of fruits) {
-        // Wait a bit after drop before checking game over
+        // Line is at y=100
         if (fruit.position.y < 100 && Math.abs(fruit.velocity.y) < 0.1 && (fruit as any).spawnTime && Date.now() - (fruit as any).spawnTime > 1500) {
            this.isGameOver = true;
            this.onGameOver();
