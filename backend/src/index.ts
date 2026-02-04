@@ -1,12 +1,11 @@
 export interface Env {
-  DB: D1Database;
+  RANKING_KV: KVNamespace;
 }
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
-    // CORS headers
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -17,21 +16,17 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // GET /ranking - Fetch top scores
+    const KV_KEY = "top_scores";
+
+    // GET /ranking
     if (url.pathname === "/ranking" && request.method === "GET") {
-      try {
-        const { results } = await env.DB.prepare(
-          "SELECT score FROM rankings ORDER BY score DESC LIMIT 10"
-        ).all();
-        return new Response(JSON.stringify(results), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      } catch (e: any) {
-        return new Response(e.message, { status: 500, headers: corsHeaders });
-      }
+      const data = await env.RANKING_KV.get(KV_KEY, "json") || [];
+      return new Response(JSON.stringify(data), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // POST /ranking - Submit a new score
+    // POST /ranking
     if (url.pathname === "/ranking" && request.method === "POST") {
       try {
         const { score } = (await request.json()) as { score: number };
@@ -39,9 +34,18 @@ export default {
           return new Response("Invalid score", { status: 400, headers: corsHeaders });
         }
 
-        await env.DB.prepare(
-          "INSERT INTO rankings (score) VALUES (?)"
-        ).bind(score).run();
+        // Fetch current ranking
+        let ranking = (await env.RANKING_KV.get<{ score: number }[]>(KV_KEY, "json")) || [];
+
+        // Add new score and sort
+        ranking.push({ score });
+        ranking.sort((a, b) => b.score - a.score);
+
+        // Keep top 10
+        ranking = ranking.slice(0, 10);
+
+        // Save back to KV
+        await env.RANKING_KV.put(KV_KEY, JSON.stringify(ranking));
 
         return new Response("OK", { status: 201, headers: corsHeaders });
       } catch (e: any) {
