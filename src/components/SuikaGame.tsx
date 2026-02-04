@@ -19,6 +19,7 @@ const SuikaGame: React.FC = () => {
   const [launcherX, setLauncherX] = useState(270);
   const launcherXRef = useRef(270);
   const targetLauncherXRef = useRef(270);
+  const currentTiltRef = useRef(0);
   const [dropTimer, setDropTimer] = useState(5);
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [isGyroEnabled, setIsGyroEnabled] = useState(false);
@@ -88,18 +89,26 @@ const SuikaGame: React.FC = () => {
     let animationFrame: number;
     const update = () => {
       if (isGyroEnabled && isGameStarted && !isGameOver) {
-        // Linear Interpolation (Lerp) for smooth movement
-        // launcherXRef follows targetLauncherXRef
-        const lerpFactor = 0.15;
-        launcherXRef.current += (targetLauncherXRef.current - launcherXRef.current) * lerpFactor;
+        // Movement logic: Constant speed when tilted beyond dead zone
+        const deadZone = 7;
+        const moveSpeed = 6;
 
-        // Clamp to screen bounds based on current fruit size
+        if (currentTiltRef.current > deadZone) {
+          targetLauncherXRef.current += moveSpeed;
+        } else if (currentTiltRef.current < -deadZone) {
+          targetLauncherXRef.current -= moveSpeed;
+        }
+
+        // Clamp target position to screen bounds based on current fruit size
         const radius = currentFruitRef.current.radius;
         const minX = radius + 20;
         const maxX = containerWidth - radius - 20;
+        if (targetLauncherXRef.current < minX) targetLauncherXRef.current = minX;
+        if (targetLauncherXRef.current > maxX) targetLauncherXRef.current = maxX;
 
-        if (launcherXRef.current < minX) launcherXRef.current = minX;
-        if (launcherXRef.current > maxX) launcherXRef.current = maxX;
+        // Linear Interpolation (Lerp) for smooth movement feel
+        const lerpFactor = 0.2;
+        launcherXRef.current += (targetLauncherXRef.current - launcherXRef.current) * lerpFactor;
 
         setLauncherX(launcherXRef.current);
       }
@@ -116,18 +125,11 @@ const SuikaGame: React.FC = () => {
 
       const { gamma } = event;
       if (gamma !== null) {
-        // Direct Linear Relationship:
-        // Map gamma [-30, 30] to the movement range.
-        const maxTilt = 30;
-        const normalizedTilt = Math.max(-1, Math.min(1, gamma / maxTilt));
+        currentTiltRef.current = gamma;
 
-        // Target position based on tilt
-        const range = (containerWidth - 100) / 2; // Center +/- 220px
-        targetLauncherXRef.current = 270 + normalizedTilt * range;
-
-        // Gravity also follows the tilt
-        const gx = Math.sin((gamma * Math.PI) / 180) * 1.2;
-        const gy = Math.cos((gamma * Math.PI) / 180) * 1.0;
+        // Gravity follows the tilt - enhanced sensitivity
+        const gx = Math.sin((gamma * Math.PI) / 180) * 2.5;
+        const gy = Math.cos((gamma * Math.PI) / 180) * 1.5;
         engineRef.current?.setGravity(gx, gy);
       }
     };
@@ -336,6 +338,7 @@ const SuikaGame: React.FC = () => {
                 newX = Math.max(radius + 20, Math.min(containerWidth - radius - 20, newX));
                 setLauncherX(newX);
                 launcherXRef.current = newX;
+                targetLauncherXRef.current = newX;
               }
             }}
           />

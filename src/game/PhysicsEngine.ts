@@ -108,8 +108,10 @@ export class PhysicsEngine {
   }
 
   addFruit(x: number, y: number, fruitType: FruitType) {
-    // Assuming original assets are around 512px. Scale to match radius.
-    const scale = (fruitType.radius * 2) / 512;
+    // Assets have some transparent padding.
+    // We scale the image slightly larger than the physics body to compensate.
+    const visualPaddingFactor = 1.18;
+    const scale = (fruitType.radius * 2 * visualPaddingFactor) / 512;
     const fruit = Matter.Bodies.circle(x, y, fruitType.radius, {
       label: `fruit-${fruitType.id}`,
       restitution: 0.3,
