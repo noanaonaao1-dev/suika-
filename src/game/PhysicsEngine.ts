@@ -6,8 +6,8 @@ export class PhysicsEngine {
   engine: Matter.Engine;
   render: Matter.Render;
   runner: Matter.Runner;
-  containerWidth: number = 400;
-  containerHeight: number = 600;
+  containerWidth: number = 450;
+  containerHeight: number = 650;
   onScoreUpdate: (score: number) => void;
   onGameOver: () => void;
   isGameOver: boolean = false;
@@ -69,7 +69,7 @@ export class PhysicsEngine {
       event.pairs.forEach((pair) => {
         const { bodyA, bodyB } = pair;
 
-        if (bodyA.label === bodyB.label && bodyA.label.startsWith("fruit-")) {
+        if (bodyA.label === bodyB.label && bodyA.label && bodyA.label.startsWith("fruit-")) {
           const fruitId = parseInt(bodyA.label.split("-")[1]);
           if (fruitId < FRUIT_TYPES.length - 1) {
             // Merge
@@ -90,14 +90,14 @@ export class PhysicsEngine {
       });
     });
 
-    // Game Over check: simplified - check if any fruit is above the limit line
+    // Game Over check
     Matter.Events.on(this.engine, "afterUpdate", () => {
       if (this.isGameOver) return;
 
-      const fruits = this.engine.world.bodies.filter(b => b.label.startsWith("fruit-"));
+      const fruits = this.engine.world.bodies.filter(b => b.label && b.label.startsWith("fruit-"));
       for (const fruit of fruits) {
-        // Wait a bit after drop before checking game over to avoid immediate game over on spawn
-        if (fruit.position.y < 80 && fruit.velocity.y < 0.1 && (fruit as any).spawnTime && Date.now() - (fruit as any).spawnTime > 1000) {
+        // Wait a bit after drop before checking game over
+        if (fruit.position.y < 100 && Math.abs(fruit.velocity.y) < 0.1 && (fruit as any).spawnTime && Date.now() - (fruit as any).spawnTime > 1500) {
            this.isGameOver = true;
            this.onGameOver();
            break;
@@ -107,12 +107,17 @@ export class PhysicsEngine {
   }
 
   addFruit(x: number, y: number, fruitType: FruitType) {
+    const scale = (fruitType.radius * 2) / 500;
     const fruit = Matter.Bodies.circle(x, y, fruitType.radius, {
       label: `fruit-${fruitType.id}`,
       restitution: 0.3,
       friction: 0.1,
       render: {
-        fillStyle: fruitType.color,
+        sprite: {
+          texture: fruitType.image,
+          xScale: scale,
+          yScale: scale,
+        },
       },
     });
     (fruit as any).spawnTime = Date.now();
