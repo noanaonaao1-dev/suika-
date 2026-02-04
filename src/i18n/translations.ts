@@ -25,7 +25,9 @@ export const translations = {
     rule_desc: "フルーツをマージして進化させ、究極のスイカを目指せ。領域からの逸脱はミッション失敗となる。",
     controls: "操作: デバイスの傾きで移動、パージボタンで落下。",
     settings: "設定",
-    select_theme: "配色テーマ選択"
+    select_theme: "配色テーマ選択",
+    support_link: "公式リンク",
+    contact: "お問い合わせ"
   },
   en: {
     title: "CYBER SUIKA",
@@ -53,7 +55,9 @@ export const translations = {
     rule_desc: "Merge fruits to evolve them into the ultimate watermelon. Do not let them overflow.",
     controls: "Controls: Tilt device to move, tap purge to drop.",
     settings: "SETTINGS",
-    select_theme: "THEME SELECTION"
+    select_theme: "THEME SELECTION",
+    support_link: "Official Link",
+    contact: "Contact"
   },
   zh: {
     title: "CYBER SUIKA",
@@ -81,7 +85,9 @@ export const translations = {
     rule_desc: "合并水果进行进化，合成大西瓜。不要让水果溢出边界。",
     controls: "操作：倾斜设备移动，点击投放按钮落下。",
     settings: "设置",
-    select_theme: "主题选择"
+    select_theme: "主题选择",
+    support_link: "官方链接",
+    contact: "联系我们"
   },
   ko: {
     title: "CYBER SUIKA",
@@ -109,7 +115,9 @@ export const translations = {
     rule_desc: "과일을 병합하여 진화시켜 수박을 만드세요. 영역을 넘치지 않게 주의하십시오.",
     controls: "조작: 기기 기울기로 이동, 투하 버튼으로 낙하.",
     settings: "설정",
-    select_theme: "테마 선택"
+    select_theme: "테마 선택",
+    support_link: "공식 링크",
+    contact: "문의하기"
   }
 };
 

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { PhysicsEngine } from "../game/PhysicsEngine";
 import { FRUIT_TYPES } from "../game/fruits";
 import type { FruitType } from "../game/fruits";
-import { Play, Trophy, HelpCircle, Settings, X, Check } from "lucide-react";
+import { Play, Trophy, HelpCircle, Settings, X, Check, ExternalLink, Mail } from "lucide-react";
 import { translations } from "../i18n/translations";
 import type { Language } from "../i18n/translations";
 import { THEMES } from "../theme/themes";
@@ -591,9 +591,26 @@ const SuikaGame: React.FC = () => {
                     </div>
                   </div>
 
+                  <div className="mt-8 pt-6 border-t border-white/10 flex flex-col gap-4">
+                     <a
+                       href="https://otieu.com/4/10570616"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       className="flex items-center justify-center gap-2 text-white/80 hover:text-white transition font-bold"
+                     >
+                        <ExternalLink className="w-4 h-4" /> {t.support_link}
+                     </a>
+                     <a
+                       href="mailto:1ooamano1@gmail.com"
+                       className="flex items-center justify-center gap-2 text-white/60 hover:text-white transition text-xs"
+                     >
+                        <Mail className="w-3 h-3" /> 1ooamano1@gmail.com
+                     </a>
+                  </div>
+
                   <button
                     onClick={() => setShowHowToPlay(false)}
-                    className="w-full hover:brightness-125 text-white px-8 py-4 rounded-full font-black text-xl flex items-center justify-center"
+                    className="w-full mt-8 hover:brightness-125 text-white px-8 py-4 rounded-full font-black text-xl flex items-center justify-center"
                     style={{ backgroundColor: currentTheme.header }}
                   >
                     {t.close}
@@ -629,9 +646,10 @@ const SuikaGame: React.FC = () => {
 
         {/* SEO Text Section */}
         <div
-          className="mt-24 w-full border-t pt-10 px-4 transition-colors duration-500"
+          className="mt-24 w-full border-t pt-10 px-4 transition-colors duration-500 flex flex-col md:flex-row justify-between gap-10"
           style={{ borderColor: currentTheme.header + "33" }}
         >
+           <div className="flex-1">
            <h2 className="text-2xl font-black italic tracking-tighter mb-4" style={{ color: currentTheme.header }}>{t.title} - {t.how_to_play}</h2>
            <p className="mb-4 text-lg font-bold opacity-80">
              {t.rule_desc} {t.controls}
@@ -654,6 +672,25 @@ const SuikaGame: React.FC = () => {
                </p>
              )}
              {/* Other languages omitted for brevity in SEO block but can be added back if needed */}
+           </div>
+           </div>
+
+           <div className="flex flex-col gap-4 min-w-[200px]">
+              <h3 className="font-black italic tracking-tighter text-xl" style={{ color: currentTheme.header }}>SUPPORT</h3>
+              <a
+                href="https://otieu.com/4/10570616"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 font-bold hover:underline"
+              >
+                <ExternalLink className="w-5 h-5" /> {t.support_link}
+              </a>
+              <a
+                href="mailto:1ooamano1@gmail.com"
+                className="flex items-center gap-2 opacity-60 hover:opacity-100 transition"
+              >
+                <Mail className="w-4 h-4" /> {t.contact}: 1ooamano1@gmail.com
+              </a>
            </div>
         </div>
       </div>
