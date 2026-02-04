@@ -1,0 +1,9 @@
+# Cloudflare Pages Configuration
+name = "suika-game"
+pages_build_output_dir = "dist"
+
+[build]
+command = "npm run build"
+
+[vars]
+VITE_API_URL = "https://suika-ranking.your-subdomain.workers.dev"
