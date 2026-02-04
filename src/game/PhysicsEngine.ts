@@ -6,8 +6,8 @@ export class PhysicsEngine {
   engine: Matter.Engine;
   render: Matter.Render;
   runner: Matter.Runner;
-  containerWidth: number = 450;
-  containerHeight: number = 650;
+  containerWidth: number;
+  containerHeight: number;
   onScoreUpdate: (score: number) => void;
   onGameOver: () => void;
   isGameOver: boolean = false;
@@ -15,8 +15,12 @@ export class PhysicsEngine {
   constructor(
     element: HTMLElement,
     onScoreUpdate: (score: number) => void,
-    onGameOver: () => void
+    onGameOver: () => void,
+    width: number = 540,
+    height: number = 780
   ) {
+    this.containerWidth = width;
+    this.containerHeight = height;
     this.engine = Matter.Engine.create();
     this.onScoreUpdate = onScoreUpdate;
     this.onGameOver = onGameOver;
@@ -28,7 +32,7 @@ export class PhysicsEngine {
         width: this.containerWidth,
         height: this.containerHeight,
         wireframes: false,
-        background: "transparent", // Use CSS background
+        background: "transparent",
       },
     });
 
@@ -40,12 +44,9 @@ export class PhysicsEngine {
   setupWorld() {
     const wallOptions = {
       isStatic: true,
-      render: {
-        fillStyle: "transparent" // Hide physics walls, use CSS for visuals
-      }
+      render: { fillStyle: "transparent" }
     };
 
-    // Bottom
     const ground = Matter.Bodies.rectangle(
       this.containerWidth / 2,
       this.containerHeight + 25,
@@ -53,7 +54,6 @@ export class PhysicsEngine {
       50,
       wallOptions
     );
-    // Left
     const leftWall = Matter.Bodies.rectangle(
       -25,
       this.containerHeight / 2,
@@ -61,7 +61,6 @@ export class PhysicsEngine {
       this.containerHeight,
       wallOptions
     );
-    // Right
     const rightWall = Matter.Bodies.rectangle(
       this.containerWidth + 25,
       this.containerHeight / 2,
@@ -81,32 +80,25 @@ export class PhysicsEngine {
         if (bodyA.label === bodyB.label && bodyA.label && bodyA.label.startsWith("fruit-")) {
           const fruitId = parseInt(bodyA.label.split("-")[1]);
           if (fruitId < FRUIT_TYPES.length - 1) {
-            // Merge
             const nextFruit = FRUIT_TYPES[fruitId + 1];
             const midX = (bodyA.position.x + bodyB.position.x) / 2;
             const midY = (bodyA.position.y + bodyB.position.y) / 2;
 
-            // Remove old fruits
             Matter.World.remove(this.engine.world, [bodyA, bodyB]);
-
-            // Add new fruit
             this.addFruit(midX, midY, nextFruit);
-
-            // Update score
             this.onScoreUpdate(nextFruit.score);
           }
         }
       });
     });
 
-    // Game Over check
     Matter.Events.on(this.engine, "afterUpdate", () => {
       if (this.isGameOver) return;
 
       const fruits = this.engine.world.bodies.filter(b => b.label && b.label.startsWith("fruit-"));
       for (const fruit of fruits) {
-        // Line is at y=100
-        if (fruit.position.y < 100 && Math.abs(fruit.velocity.y) < 0.1 && (fruit as any).spawnTime && Date.now() - (fruit as any).spawnTime > 1500) {
+        // Line is now at y=120
+        if (fruit.position.y < 120 && Math.abs(fruit.velocity.y) < 0.1 && (fruit as any).spawnTime && Date.now() - (fruit as any).spawnTime > 1500) {
            this.isGameOver = true;
            this.onGameOver();
            break;
@@ -116,7 +108,8 @@ export class PhysicsEngine {
   }
 
   addFruit(x: number, y: number, fruitType: FruitType) {
-    const scale = (fruitType.radius * 2) / 500;
+    // Assuming original assets are around 512px. Scale to match radius.
+    const scale = (fruitType.radius * 2) / 512;
     const fruit = Matter.Bodies.circle(x, y, fruitType.radius, {
       label: `fruit-${fruitType.id}`,
       restitution: 0.3,
